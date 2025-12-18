@@ -20,6 +20,8 @@ export interface Property {
     imageUrl?: string
     /** Optional description */
     description?: string
+    /** Property tenure (freehold/leasehold) */
+    tenure?: "freehold" | "leasehold" | "share of freehold" | "unknown"
 }
 
 /**
