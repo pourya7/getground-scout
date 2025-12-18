@@ -469,6 +469,48 @@ const RightmoveSidebar = () => {
                                     </div>
                                 )}
                             </div>
+
+                            {/* Dead Money Calculator */}
+                            {btlMetrics && btlMetrics.deposit > 0 && (
+                                <div className="space-y-2">
+                                    <h3 className="text-gray-900 font-medium text-sm flex items-center gap-2">
+                                        <span className="w-1.5 h-1.5 bg-amber-500 rounded-full"></span>
+                                        Dead Money Calculator
+                                    </h3>
+                                    <div className="bg-gradient-to-br from-amber-50 to-yellow-50 rounded-lg p-3 border border-amber-200 space-y-3">
+                                        <p className="text-xs text-gray-600">
+                                            Your <span className="font-bold text-gray-800">{formatPrice(btlMetrics.deposit)}</span> deposit sits idle during conveyancing (typically 3-6 months).
+                                        </p>
+
+                                        {/* Interest Calculation at 5.1% yield */}
+                                        {(() => {
+                                            const yield51 = 0.051 // 5.1% annual yield from WealthKernel
+                                            const deposit = btlMetrics.deposit
+                                            const interest3mo = Math.round(deposit * yield51 * (3 / 12))
+                                            const interest6mo = Math.round(deposit * yield51 * (6 / 12))
+
+                                            return (
+                                                <div className="space-y-2">
+                                                    <div className="flex justify-between items-center text-xs">
+                                                        <span className="text-gray-500">3 months @ 5.1%</span>
+                                                        <span className="font-bold text-green-600">+{formatPrice(interest3mo)}</span>
+                                                    </div>
+                                                    <div className="flex justify-between items-center text-xs">
+                                                        <span className="text-gray-500">6 months @ 5.1%</span>
+                                                        <span className="font-bold text-green-600">+{formatPrice(interest6mo)}</span>
+                                                    </div>
+                                                </div>
+                                            )
+                                        })()}
+
+                                        <div className="pt-2 border-t border-amber-200">
+                                            <p className="text-[11px] text-amber-800 font-medium">
+                                                💰 You could earn <span className="font-bold">{formatPrice(Math.round(btlMetrics.deposit * 0.051 * 0.5))}</span> with a GetGround Investment Pot instead of leaving it in a solicitor's account.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
                         </>
                     ) : (
                         <div className="text-center py-8">
