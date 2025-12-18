@@ -100,6 +100,12 @@ importers:
         specifier: ^5.7.2
         version: 5.9.3
 
+  packages/wealth-kernel:
+    devDependencies:
+      typescript:
+        specifier: ^5.7.2
+        version: 5.9.3
+
 packages:
 
   '@ai-sdk/gateway@2.0.22':
