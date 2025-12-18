@@ -5,6 +5,15 @@ import type { Property } from "@getground-scout/types"
 import { calculateBTLMetrics, calculateSection24Tax, type TaxBand } from "@getground-scout/calculator"
 import { extractPropertyData } from "../lib/scraper"
 
+// Risk data type from extraction API
+interface PropertyRisk {
+    leaseYears: number | null
+    groundRent: number | null
+    reviewPeriod: string | null
+    serviceCharge: number | null
+    tenure: 'freehold' | 'leasehold' | 'share of freehold' | 'unknown'
+}
+
 export const config: PlasmoCSConfig = {
     matches: ["https://www.rightmove.co.uk/properties/*"],
     all_frames: false,
@@ -40,6 +49,8 @@ const RightmoveSidebar = () => {
     const [isOpen, setIsOpen] = useState(true)
     const [monthlyRentInput, setMonthlyRentInput] = useState<string>("")
     const [taxBand, setTaxBand] = useState<TaxBand>(0.40)
+    const [riskData, setRiskData] = useState<PropertyRisk | null>(null)
+    const [riskLoading, setRiskLoading] = useState(false)
 
     useEffect(() => {
         // Extract property data on mount (now async)
@@ -350,6 +361,81 @@ const RightmoveSidebar = () => {
                                     </div>
                                 </div>
                             )}
+
+                            {/* Risk Dashboard */}
+                            <div className="space-y-2">
+                                <div className="flex items-center justify-between">
+                                    <h3 className="text-gray-900 font-medium text-sm flex items-center gap-2">
+                                        <span className="w-1.5 h-1.5 bg-red-500 rounded-full"></span>
+                                        Risk Dashboard
+                                    </h3>
+                                    {!riskData && !riskLoading && property.description && (
+                                        <button
+                                            onClick={async () => {
+                                                setRiskLoading(true)
+                                                try {
+                                                    const res = await fetch('http://localhost:3000/api/extract', {
+                                                        method: 'POST',
+                                                        headers: { 'Content-Type': 'application/json' },
+                                                        body: JSON.stringify({ text: property.description })
+                                                    })
+                                                    if (res.ok) {
+                                                        const data = await res.json()
+                                                        setRiskData(data)
+                                                    }
+                                                } catch (e) {
+                                                    console.error('Risk extraction failed:', e)
+                                                } finally {
+                                                    setRiskLoading(false)
+                                                }
+                                            }}
+                                            className="text-[10px] px-2 py-1 bg-primary-100 text-primary-700 rounded-md hover:bg-primary-200 transition-colors font-medium"
+                                        >
+                                            Analyze with AI
+                                        </button>
+                                    )}
+                                </div>
+                                <div className="bg-gray-50 rounded-lg p-3 border border-gray-100">
+                                    {riskLoading ? (
+                                        <div className="flex items-center justify-center py-2">
+                                            <svg className="animate-spin h-4 w-4 text-primary-500" fill="none" viewBox="0 0 24 24">
+                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                            </svg>
+                                            <span className="ml-2 text-xs text-gray-500">Analyzing...</span>
+                                        </div>
+                                    ) : riskData ? (
+                                        <div className="space-y-2 text-xs">
+                                            <div className="flex justify-between items-center">
+                                                <span className="text-gray-500">Lease Length</span>
+                                                <span className={`font-bold ${riskData.leaseYears !== null && riskData.leaseYears < 80 ? 'text-red-600' : riskData.leaseYears !== null && riskData.leaseYears < 125 ? 'text-amber-600' : 'text-gray-700'}`}>
+                                                    {riskData.leaseYears !== null ? `${riskData.leaseYears} years` : '—'}
+                                                </span>
+                                            </div>
+                                            <div className="flex justify-between items-center">
+                                                <span className="text-gray-500">Ground Rent</span>
+                                                <span className={`font-bold ${riskData.groundRent !== null && riskData.groundRent > 250 ? 'text-red-600' : riskData.groundRent !== null && riskData.groundRent > 0 ? 'text-amber-600' : 'text-gray-700'}`}>
+                                                    {riskData.groundRent !== null ? formatPrice(riskData.groundRent) + '/yr' : '—'}
+                                                </span>
+                                            </div>
+                                            {riskData.reviewPeriod && (
+                                                <div className="flex justify-between items-center">
+                                                    <span className="text-gray-500">Review Period</span>
+                                                    <span className="font-medium text-amber-600">{riskData.reviewPeriod}</span>
+                                                </div>
+                                            )}
+                                            <div className="flex justify-between items-center">
+                                                <span className="text-gray-500">Service Charge</span>
+                                                <span className="font-bold text-gray-700">
+                                                    {riskData.serviceCharge !== null ? formatPrice(riskData.serviceCharge) + '/yr' : '—'}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <p className="text-gray-400 text-xs text-center py-2">Click "Analyze with AI" to extract risk data</p>
+                                    )}
+                                </div>
+                            </div>
                         </>
                     ) : (
                         <div className="text-center py-8">

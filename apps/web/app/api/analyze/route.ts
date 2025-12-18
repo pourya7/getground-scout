@@ -1,18 +1,33 @@
 import { streamText } from 'ai'
 import { openai } from '@ai-sdk/openai'
 
+// CORS headers for cross-origin requests from browser extension
+const corsHeaders = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type',
+}
+
+// Handle preflight requests
+export async function OPTIONS() {
+    return new Response(null, {
+        status: 204,
+        headers: corsHeaders
+    })
+}
+
 export async function POST(request: Request) {
     const { text } = await request.json()
 
     if (!text || typeof text !== 'string') {
         return new Response(JSON.stringify({ error: 'Text payload required' }), {
             status: 400,
-            headers: { 'Content-Type': 'application/json' }
+            headers: { 'Content-Type': 'application/json', ...corsHeaders }
         })
     }
 
     const result = streamText({
-        model: openai('gpt-5-nano'),
+        model: openai('gpt-4o-mini'),
         system: `You are a property analysis assistant for UK Buy-To-Let investors.
 Your job is to analyze property listing text and identify potential red flags or "scary" details that investors should be aware of.
 
@@ -31,5 +46,11 @@ Format your response as:
         prompt: `Analyze this property listing text for potential red flags:\n\n${text}`
     })
 
-    return result.toTextStreamResponse()
+    // Add CORS headers to the stream response
+    const response = result.toTextStreamResponse()
+    Object.entries(corsHeaders).forEach(([key, value]) => {
+        response.headers.set(key, value)
+    })
+    return response
 }
+
