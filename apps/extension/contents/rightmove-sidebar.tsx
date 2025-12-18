@@ -285,8 +285,8 @@ const RightmoveSidebar = () => {
                                                                 key={rate}
                                                                 onClick={() => setTaxBand(rate)}
                                                                 className={`flex-1 py-1.5 text-xs font-medium transition-all ${taxBand === rate
-                                                                        ? 'bg-primary-500 text-white'
-                                                                        : 'bg-white text-gray-600 hover:bg-gray-50'
+                                                                    ? 'bg-primary-500 text-white'
+                                                                    : 'bg-white text-gray-600 hover:bg-gray-50'
                                                                     }`}
                                                             >
                                                                 {rate * 100}%
@@ -364,8 +364,30 @@ const RightmoveSidebar = () => {
                     )}
                 </div>
 
-                {/* Footer */}
-                <div className="bg-gradient-to-r from-gray-50 to-gray-100 px-4 py-2 border-t border-gray-200">
+                {/* Footer with CTA */}
+                <div className="bg-gradient-to-r from-gray-50 to-gray-100 px-4 py-3 border-t border-gray-200 space-y-2">
+                    {property && (
+                        <a
+                            href={`https://www.getground.co.uk/start?price=${encodeURIComponent(property.price)}&address=${encodeURIComponent(property.address)}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="
+                                flex items-center justify-center gap-2
+                                w-full py-2.5 px-4
+                                bg-gradient-to-r from-primary-500 to-primary-600
+                                hover:from-primary-400 hover:to-primary-500
+                                text-white text-sm font-semibold
+                                rounded-lg shadow-md
+                                transition-all duration-200
+                                hover:shadow-lg hover:-translate-y-0.5
+                            "
+                        >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                            </svg>
+                            Buy with GetGround
+                        </a>
+                    )}
                     <p className="text-gray-400 text-xs text-center">
                         Powered by{" "}
                         <a
