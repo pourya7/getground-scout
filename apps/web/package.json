@@ -9,7 +9,9 @@
         "lint": "next lint"
     },
     "dependencies": {
+        "@ai-sdk/openai": "^2.0.88",
         "@getground-scout/types": "workspace:*",
+        "ai": "^5.0.115",
         "next": "^15.1.0",
         "react": "^19.0.0",
         "react-dom": "^19.0.0"
