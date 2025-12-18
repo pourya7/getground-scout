@@ -1,7 +1,8 @@
 import cssText from "data-text:~style.css"
-import { useEffect, useState } from "react"
+import { useEffect, useState, useMemo } from "react"
 import type { PlasmoCSConfig } from "plasmo"
 import type { Property } from "@getground-scout/types"
+import { calculateBTLMetrics } from "@getground-scout/calculator"
 import { extractPropertyData } from "../lib/scraper"
 
 export const config: PlasmoCSConfig = {
@@ -37,18 +38,39 @@ const RightmoveSidebar = () => {
     const [property, setProperty] = useState<Property | null>(null)
     const [loading, setLoading] = useState(true)
     const [isOpen, setIsOpen] = useState(true)
+    const [monthlyRentInput, setMonthlyRentInput] = useState<string>("")
 
     useEffect(() => {
         // Extract property data on mount (now async)
         extractPropertyData().then((data) => {
             setProperty(data)
             setLoading(false)
+            // Initial rent estimate (e.g., 5% yield)
+            if (data?.price) {
+                const estimatedRent = Math.round((data.price * 0.05) / 12)
+                setMonthlyRentInput(estimatedRent.toString())
+            }
         })
     }, [])
 
+    // Memoize BTL calculations
+    const btlMetrics = useMemo(() => {
+        if (!property || !property.price) return null
+        const rent = parseInt(monthlyRentInput) || 0
+        try {
+            return calculateBTLMetrics({
+                price: property.price,
+                monthlyRent: rent,
+                ltv: 0.75, // Default assumption
+                interestRate: 0.05 // Default assumption
+            })
+        } catch (e) {
+            return null
+        }
+    }, [property, monthlyRentInput])
+
     // Format price as currency
     const formatPrice = (price: number) => {
-        if (!price) return "N/A"
         return new Intl.NumberFormat("en-GB", {
             style: "currency",
             currency: "GBP",
@@ -146,6 +168,87 @@ const RightmoveSidebar = () => {
                                 </div>
                             </div>
 
+                            {/* Investment Input */}
+                            <div className="space-y-2">
+                                <h3 className="text-gray-900 font-medium text-sm flex items-center gap-2">
+                                    <span className="w-1.5 h-1.5 bg-primary-500 rounded-full"></span>
+                                    Investment Analysis
+                                </h3>
+                                <div className="bg-gray-50 rounded-lg p-3 space-y-3 border border-gray-100">
+                                    <div className="space-y-1">
+                                        <label htmlFor="monthly-rent" className="block text-[10px] font-semibold text-gray-400 uppercase tracking-wider">
+                                            Estimated Monthly Rent
+                                        </label>
+                                        <div className="relative">
+                                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-medium">£</span>
+                                            <input
+                                                id="monthly-rent"
+                                                type="number"
+                                                value={monthlyRentInput}
+                                                onChange={(e) => setMonthlyRentInput(e.target.value)}
+                                                className="w-full bg-white border border-gray-200 rounded-lg py-2 pl-7 pr-3 text-sm font-medium text-gray-700 outline-none focus:border-primary-400 focus:ring-2 focus:ring-primary-500/10 transition-all"
+                                                placeholder="e.g. 1800"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Results */}
+                            {btlMetrics && (
+                                <>
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <div className="bg-gray-50 rounded-lg p-3 border border-gray-100">
+                                            <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Stamp Duty</p>
+                                            <p className="text-gray-700 font-bold text-sm">{formatPrice(btlMetrics.stampDuty)}</p>
+                                        </div>
+                                        <div className="bg-gray-50 rounded-lg p-3 border border-gray-100">
+                                            <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Net Monthly</p>
+                                            <p className={`font-bold text-sm ${btlMetrics.monthlyNetProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                                {formatPrice(btlMetrics.monthlyNetProfit)}
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <div className="bg-primary-50 rounded-xl p-4 border border-primary-100 space-y-3">
+                                        <div className="flex justify-between items-center text-xs">
+                                            <span className="text-gray-500">Gross Yield</span>
+                                            <span className="text-primary-700 font-bold">{btlMetrics.grossYield}%</span>
+                                        </div>
+                                        <div className="flex justify-between items-center text-xs">
+                                            <span className="text-gray-500">Effective Stamp Duty</span>
+                                            <span className="text-primary-700 font-semibold">{btlMetrics.stampDutyBreakdown.effectiveRate * 100}%</span>
+                                        </div>
+                                        <div className="flex justify-between items-center text-xs pt-2 border-t border-primary-100">
+                                            <span className="text-gray-600 font-medium">Return on Capital</span>
+                                            <span className="text-primary-700 font-bold text-sm">{btlMetrics.returnOnCapital}%</span>
+                                        </div>
+                                    </div>
+
+                                    {/* Monthly Breakdown */}
+                                    <div className="space-y-2">
+                                        <h3 className="text-gray-900 font-medium text-sm flex items-center gap-2">
+                                            <span className="w-1.5 h-1.5 bg-primary-300 rounded-full"></span>
+                                            Monthly Breakdown
+                                        </h3>
+                                        <div className="bg-gray-50 rounded-lg p-3 space-y-2 border border-gray-100 text-[11px]">
+                                            <div className="flex justify-between text-gray-500">
+                                                <span>Mortgage (75% LTV @ 5%)</span>
+                                                <span className="font-medium text-gray-700">-{formatPrice(btlMetrics.monthlyMortgage)}</span>
+                                            </div>
+                                            <div className="flex justify-between text-gray-500">
+                                                <span>Running Costs (Est.)</span>
+                                                <span className="font-medium text-gray-700">-{formatPrice(btlMetrics.monthlyExpenses.total - btlMetrics.monthlyMortgage)}</span>
+                                            </div>
+                                            <div className="flex justify-between text-gray-500 pt-1 border-t border-gray-200">
+                                                <span className="font-medium text-gray-700">Total Expenses</span>
+                                                <span className="font-bold text-red-600">-{formatPrice(btlMetrics.monthlyExpenses.total)}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </>
+                            )}
+
                             {/* Tenure */}
                             <div className="space-y-2">
                                 <h3 className="text-gray-900 font-medium text-sm flex items-center gap-2">
@@ -178,27 +281,6 @@ const RightmoveSidebar = () => {
                                     </div>
                                 </div>
                             )}
-
-                            {/* Placeholder sections */}
-                            <div className="space-y-2">
-                                <h3 className="text-gray-900 font-medium text-sm flex items-center gap-2">
-                                    <span className="w-1.5 h-1.5 bg-primary-300 rounded-full"></span>
-                                    Tax Efficiency
-                                </h3>
-                                <div className="bg-gradient-to-br from-primary-50 to-primary-100/50 rounded-lg p-4 text-center border border-primary-100">
-                                    <p className="text-primary-600 text-xs font-medium">Coming soon...</p>
-                                </div>
-                            </div>
-
-                            <div className="space-y-2">
-                                <h3 className="text-gray-900 font-medium text-sm flex items-center gap-2">
-                                    <span className="w-1.5 h-1.5 bg-primary-300 rounded-full"></span>
-                                    Investment Pots
-                                </h3>
-                                <div className="bg-gradient-to-br from-primary-50 to-primary-100/50 rounded-lg p-4 text-center border border-primary-100">
-                                    <p className="text-primary-600 text-xs font-medium">Coming soon...</p>
-                                </div>
-                            </div>
                         </>
                     ) : (
                         <div className="text-center py-8">
