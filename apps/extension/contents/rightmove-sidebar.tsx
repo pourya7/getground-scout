@@ -63,11 +63,11 @@ const RightmoveSidebar = () => {
     }
 
     return (
-        <div className="fixed top-20 right-0 z-[9999] flex items-start">
+        <div className={`fixed top-20 right-0 z-[9999] flex items-start transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : 'translate-x-[calc(100%-2rem)]'}`}>
             {/* Toggle Button */}
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className={`
+                className="
                     flex items-center justify-center
                     w-8 h-12 
                     bg-gradient-to-b from-primary-500 to-primary-600
@@ -75,10 +75,9 @@ const RightmoveSidebar = () => {
                     text-white
                     rounded-l-lg
                     shadow-lg
-                    transition-all duration-300 ease-in-out
+                    transition-colors duration-300 ease-in-out
                     border-y border-l border-primary-400
-                    ${isOpen ? 'translate-x-0' : 'translate-x-0'}
-                `}
+                "
                 title={isOpen ? "Close sidebar" : "Open sidebar"}
                 aria-label={isOpen ? "Close sidebar" : "Open sidebar"}
             >
@@ -89,8 +88,8 @@ const RightmoveSidebar = () => {
             <div
                 className={`
                     w-80 bg-white rounded-l-xl shadow-2xl border border-gray-200 border-r-0 overflow-hidden
-                    transition-all duration-300 ease-in-out
-                    ${isOpen ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0 pointer-events-none'}
+                    transition-opacity duration-300 ease-in-out
+                    ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}
                 `}
             >
                 {/* Header */}
@@ -217,7 +216,15 @@ const RightmoveSidebar = () => {
                 {/* Footer */}
                 <div className="bg-gradient-to-r from-gray-50 to-gray-100 px-4 py-2 border-t border-gray-200">
                     <p className="text-gray-400 text-xs text-center">
-                        Powered by <span className="text-primary-600 font-medium">GetGround</span>
+                        Powered by{" "}
+                        <a
+                            href="https://www.getground.co.uk"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-primary-600 font-medium hover:text-primary-700 hover:underline transition-colors"
+                        >
+                            GetGround
+                        </a>
                     </p>
                 </div>
             </div>
