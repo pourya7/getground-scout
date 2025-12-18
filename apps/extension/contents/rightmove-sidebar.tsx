@@ -2,7 +2,7 @@ import cssText from "data-text:~style.css"
 import { useEffect, useState, useMemo } from "react"
 import type { PlasmoCSConfig } from "plasmo"
 import type { Property } from "@getground-scout/types"
-import { calculateBTLMetrics } from "@getground-scout/calculator"
+import { calculateBTLMetrics, calculateSection24Tax, type TaxBand } from "@getground-scout/calculator"
 import { extractPropertyData } from "../lib/scraper"
 
 export const config: PlasmoCSConfig = {
@@ -39,6 +39,7 @@ const RightmoveSidebar = () => {
     const [loading, setLoading] = useState(true)
     const [isOpen, setIsOpen] = useState(true)
     const [monthlyRentInput, setMonthlyRentInput] = useState<string>("")
+    const [taxBand, setTaxBand] = useState<TaxBand>(0.40)
 
     useEffect(() => {
         // Extract property data on mount (now async)
@@ -68,6 +69,24 @@ const RightmoveSidebar = () => {
             return null
         }
     }, [property, monthlyRentInput])
+
+    // Memoize Section 24 tax comparison
+    const section24Metrics = useMemo(() => {
+        if (!btlMetrics) return null
+        const annualRent = btlMetrics.annualGrossRent
+        const annualFinanceCost = btlMetrics.monthlyMortgage * 12
+        const annualExpenses = (btlMetrics.monthlyExpenses.total - btlMetrics.monthlyMortgage) * 12
+        try {
+            return calculateSection24Tax({
+                annualRent,
+                annualFinanceCost,
+                annualExpenses,
+                taxBand
+            })
+        } catch (e) {
+            return null
+        }
+    }, [btlMetrics, taxBand])
 
     // Format price as currency
     const formatPrice = (price: number) => {
@@ -246,6 +265,56 @@ const RightmoveSidebar = () => {
                                             </div>
                                         </div>
                                     </div>
+
+                                    {/* Section 24 Tax Comparison */}
+                                    {section24Metrics && (
+                                        <div className="space-y-2">
+                                            <h3 className="text-gray-900 font-medium text-sm flex items-center gap-2">
+                                                <span className="w-1.5 h-1.5 bg-primary-500 rounded-full"></span>
+                                                Personal vs Company Tax
+                                            </h3>
+                                            <div className="bg-gray-50 rounded-lg p-3 space-y-3 border border-gray-100">
+                                                {/* Tax Band Toggle */}
+                                                <div className="space-y-1">
+                                                    <label className="block text-[10px] font-semibold text-gray-400 uppercase tracking-wider">
+                                                        Your Tax Band
+                                                    </label>
+                                                    <div className="flex rounded-lg overflow-hidden border border-gray-200">
+                                                        {([0.20, 0.40, 0.45] as TaxBand[]).map((rate) => (
+                                                            <button
+                                                                key={rate}
+                                                                onClick={() => setTaxBand(rate)}
+                                                                className={`flex-1 py-1.5 text-xs font-medium transition-all ${taxBand === rate
+                                                                        ? 'bg-primary-500 text-white'
+                                                                        : 'bg-white text-gray-600 hover:bg-gray-50'
+                                                                    }`}
+                                                            >
+                                                                {rate * 100}%
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                </div>
+
+                                                {/* Tax Comparison */}
+                                                <div className="space-y-2 pt-2 border-t border-gray-200">
+                                                    <div className="flex justify-between items-center text-xs">
+                                                        <span className="text-gray-500">Personal Tax (Section 24)</span>
+                                                        <span className="font-bold text-red-600">{formatPrice(section24Metrics.personalTax)}</span>
+                                                    </div>
+                                                    <div className="flex justify-between items-center text-xs">
+                                                        <span className="text-gray-500">Company Tax (SPV)</span>
+                                                        <span className="font-bold text-gray-700">{formatPrice(section24Metrics.companyTax)}</span>
+                                                    </div>
+                                                    <div className="flex justify-between items-center text-xs pt-2 border-t border-gray-200">
+                                                        <span className="font-medium text-gray-700">Annual Saving</span>
+                                                        <span className={`font-bold text-sm ${section24Metrics.annualSaving > 0 ? 'text-green-600' : 'text-gray-500'}`}>
+                                                            {section24Metrics.annualSaving > 0 ? '+' : ''}{formatPrice(section24Metrics.annualSaving)}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
                                 </>
                             )}
 
