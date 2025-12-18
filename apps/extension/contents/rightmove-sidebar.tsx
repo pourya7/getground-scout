@@ -55,6 +55,7 @@ const RightmoveSidebar = () => {
     const [taxBand, setTaxBand] = useState<TaxBand>(0.40)
     const [riskData, setRiskData] = useState<PropertyRisk | null>(null)
     const [riskLoading, setRiskLoading] = useState(false)
+    const [riskError, setRiskError] = useState<string | null>(null)
     const [activeTab, setActiveTab] = useState<'financials' | 'risks'>('financials')
 
     useEffect(() => {
@@ -208,14 +209,28 @@ const RightmoveSidebar = () => {
                 {/* Content */}
                 <div className="p-4 space-y-4 max-h-[calc(100vh-200px)] overflow-y-auto">
                     {loading ? (
-                        <div className="text-center py-8">
-                            <div className="inline-flex items-center justify-center w-10 h-10 bg-primary-50 rounded-full mb-3">
-                                <svg className="animate-spin h-5 w-5 text-primary-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                </svg>
+                        <div className="space-y-4 py-4 animate-pulse">
+                            {/* Title Skeleton */}
+                            <div className="h-4 w-1/3 bg-gray-200 rounded"></div>
+                            {/* Card Skeleton */}
+                            <div className="bg-gray-50 rounded-lg p-3 border border-gray-100 space-y-3">
+                                <div className="h-4 w-3/4 bg-gray-200 rounded"></div>
+                                <div className="h-6 w-1/4 bg-gray-200 rounded"></div>
+                                <div className="flex gap-4">
+                                    <div className="h-3 w-12 bg-gray-200 rounded"></div>
+                                    <div className="h-3 w-12 bg-gray-200 rounded"></div>
+                                </div>
                             </div>
-                            <p className="text-gray-500 text-sm">Extracting property data...</p>
+                            {/* Analysis Section Skeleton */}
+                            <div className="h-4 w-1/2 bg-gray-200 rounded"></div>
+                            <div className="bg-gray-50 rounded-lg p-3 border border-gray-100 space-y-3">
+                                <div className="h-3 w-1/4 bg-gray-200 rounded"></div>
+                                <div className="h-10 bg-gray-200 rounded"></div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-2">
+                                <div className="h-16 bg-gray-50 rounded-lg border border-gray-100"></div>
+                                <div className="h-16 bg-gray-50 rounded-lg border border-gray-100"></div>
+                            </div>
                         </div>
                     ) : property ? (
                         <>
@@ -441,6 +456,7 @@ const RightmoveSidebar = () => {
                                                             }
                                                         } catch (e) {
                                                             console.error('Risk extraction failed:', e)
+                                                            setRiskError('Could not analyze property. Please try again.')
                                                         } finally {
                                                             setRiskLoading(false)
                                                         }
@@ -453,12 +469,39 @@ const RightmoveSidebar = () => {
                                         </div>
                                         <div className="bg-gray-50 rounded-lg p-3 border border-gray-100">
                                             {riskLoading ? (
-                                                <div className="flex items-center justify-center py-2">
-                                                    <svg className="animate-spin h-4 w-4 text-primary-500" fill="none" viewBox="0 0 24 24">
-                                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                                    </svg>
-                                                    <span className="ml-2 text-xs text-gray-500">Analyzing...</span>
+                                                <div className="space-y-3 py-2">
+                                                    <div className="flex items-center gap-2">
+                                                        <svg className="animate-spin h-4 w-4 text-primary-500" fill="none" viewBox="0 0 24 24">
+                                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                        </svg>
+                                                        <span className="text-xs text-gray-500">AI is analyzing property details...</span>
+                                                    </div>
+                                                    {/* Skeleton loaders */}
+                                                    <div className="space-y-2">
+                                                        <div className="flex justify-between items-center">
+                                                            <div className="h-3 w-20 bg-gray-200 rounded animate-pulse"></div>
+                                                            <div className="h-3 w-14 bg-gray-200 rounded animate-pulse"></div>
+                                                        </div>
+                                                        <div className="flex justify-between items-center">
+                                                            <div className="h-3 w-24 bg-gray-200 rounded animate-pulse"></div>
+                                                            <div className="h-3 w-16 bg-gray-200 rounded animate-pulse"></div>
+                                                        </div>
+                                                        <div className="flex justify-between items-center">
+                                                            <div className="h-3 w-20 bg-gray-200 rounded animate-pulse"></div>
+                                                            <div className="h-3 w-12 bg-gray-200 rounded animate-pulse"></div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ) : riskError ? (
+                                                <div className="text-center py-3">
+                                                    <div className="text-red-500 text-xs mb-2">⚠️ {riskError}</div>
+                                                    <button
+                                                        onClick={() => { setRiskError(null) }}
+                                                        className="text-[10px] px-2 py-1 bg-gray-100 text-gray-600 rounded-md hover:bg-gray-200 transition-colors"
+                                                    >
+                                                        Dismiss
+                                                    </button>
                                                 </div>
                                             ) : riskData ? (
                                                 <div className="space-y-2 text-xs">
