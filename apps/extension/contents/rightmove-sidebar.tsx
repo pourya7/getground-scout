@@ -12,6 +12,10 @@ interface PropertyRisk {
     reviewPeriod: string | null
     serviceCharge: number | null
     tenure: 'freehold' | 'leasehold' | 'share of freehold' | 'unknown'
+    // Red flag fields
+    hasDoublingClause: boolean
+    shortLeaseWarning: boolean
+    redFlagSummary: string | null
 }
 
 export const config: PlasmoCSConfig = {
@@ -435,6 +439,35 @@ const RightmoveSidebar = () => {
                                         <p className="text-gray-400 text-xs text-center py-2">Click "Analyze with AI" to extract risk data</p>
                                     )}
                                 </div>
+
+                                {/* Warning Badge for Red Flags */}
+                                {riskData && (riskData.hasDoublingClause || riskData.shortLeaseWarning) && (
+                                    <div className="bg-red-50 border border-red-200 rounded-lg p-3 space-y-2">
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-lg">⚠️</span>
+                                            <span className="text-red-700 font-bold text-sm">Warning: Critical Issues Found</span>
+                                        </div>
+                                        <div className="space-y-1">
+                                            {riskData.shortLeaseWarning && (
+                                                <div className="flex items-start gap-2 text-xs text-red-700">
+                                                    <span className="font-bold">🔴</span>
+                                                    <span>Short lease (&lt;80 years) — Most lenders will refuse mortgages. Expensive extension required.</span>
+                                                </div>
+                                            )}
+                                            {riskData.hasDoublingClause && (
+                                                <div className="flex items-start gap-2 text-xs text-red-700">
+                                                    <span className="font-bold">🔴</span>
+                                                    <span>Escalating ground rent — Many lenders now refuse these properties entirely.</span>
+                                                </div>
+                                            )}
+                                        </div>
+                                        {riskData.redFlagSummary && (
+                                            <p className="text-xs text-red-600 italic pt-1 border-t border-red-200">
+                                                {riskData.redFlagSummary}
+                                            </p>
+                                        )}
+                                    </div>
+                                )}
                             </div>
                         </>
                     ) : (
