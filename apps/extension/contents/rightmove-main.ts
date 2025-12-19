@@ -99,6 +99,17 @@ console.log("[GetGround Scout Main] Extracted property data:", propertyData)
 // @ts-ignore
 window.__GETGROUND_SCOUT_DATA__ = propertyData
 
+// Listen for requests from the sidebar (in case it missed the initial postMessage)
+window.addEventListener("message", (event) => {
+    if (event.data?.type === "getground-scout-request-data") {
+        console.log("[GetGround Scout Main] Sidebar requested data, sending current state:", propertyData)
+        window.postMessage({
+            type: "getground-scout-property-data",
+            payload: propertyData
+        }, "*")
+    }
+})
+
 // Use postMessage to communicate across world boundaries (MAIN -> ISOLATED)
 window.postMessage({
     type: "getground-scout-property-data",
