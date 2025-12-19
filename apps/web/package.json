@@ -1,0 +1,26 @@
+{
+    "name": "web",
+    "version": "0.0.1",
+    "private": true,
+    "scripts": {
+        "dev": "next dev",
+        "build": "next build",
+        "start": "next start",
+        "lint": "next lint"
+    },
+    "dependencies": {
+        "@ai-sdk/openai": "^2.0.88",
+        "@getground-scout/types": "workspace:*",
+        "ai": "^5.0.115",
+        "next": "^15.1.0",
+        "react": "^19.0.0",
+        "react-dom": "^19.0.0",
+        "zod": "^4.2.1"
+    },
+    "devDependencies": {
+        "@types/node": "^22.10.1",
+        "@types/react": "^19.0.1",
+        "@types/react-dom": "^19.0.1",
+        "typescript": "^5.7.2"
+    }
+}

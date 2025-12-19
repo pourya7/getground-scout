@@ -1,0 +1,24 @@
+{
+  "extends": "plasmo/templates/tsconfig.base",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "~/*": [
+        "./*"
+      ],
+      "@getground-scout/types": [
+        "../../packages/types"
+      ]
+    }
+  },
+  "include": [
+    ".plasmo/index.d.ts",
+    "./**/*.ts",
+    "./**/*.tsx"
+  ],
+  "exclude": [
+    "node_modules",
+    "build",
+    ".plasmo"
+  ]
+}
