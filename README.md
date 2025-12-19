@@ -1,85 +1,126 @@
 # GetGround Scout 🚀
 
-GetGround Scout is a powerful browser extension and analysis tool designed to help property investors evaluate buy-to-let opportunities directly on Rightmove.
+**An AI-native browser extension that transforms Rightmove into an intelligent Buy-to-Let analysis platform.**
 
-## 📺 Video Demo
+GetGround Scout bridges the gap between property discovery and financial structuring. It injects a "Co-Pilot" overlay into property portals, using **AI to detect leasehold risks** and **real-time algorithms to calculate Section 24 tax impacts**, demonstrating the mathematical advantage of Limited Company (SPV) ownership instantly.
 
-[Watch the 2-minute walkthrough on Loom/YouTube](https://example.com/demo-video) (Placeholder)
+> **Note:** This is a **Technical Proof of Concept (PoC)** designed to demonstrate modern "AI Engineer" capabilities using Next.js, Plasmo, and the Vercel AI SDK. It is not intended for commercial distribution.
 
 ---
 
-## 🏗️ Architecture
+## 🏗️ Technical Architecture
 
-```mermaid
+This project utilizes a **Backend-for-Frontend (BFF)** pattern to keep the extension lightweight while offloading complex AI processing to the edge.mermaid
 graph TD
-    A[Rightmove Property Page] -->|Injects| B[Browser Extension]
-    B -->|Fetch| C[Next.js API Layer]
-    C -->|AI Analysis| D[OpenAI GPT-4o-mini]
-    C -->|Mock Integration| E[WealthKernel API]
-    B -->|Calculations| F[Financial Calculator Package]
-    
-    subgraph "Workspace"
-        B[apps/extension]
-        C[apps/web]
-        F[packages/calculator]
-        E[packages/wealth-kernel]
-    end
+User -->|DOM Injection| Ext
+Ext -->|Extract Data| Next[Next.js 15 API Layer]
+
+```
+subgraph "Edge Runtime"
+    Next -->|Stream Text| AI
+    AI -->|Inference| OpenAI
+    Next -->|Mock Request| WK
+end
+
+subgraph "Browser Client"
+    Ext -->|Render UI| Shadow
+    Shadow -->|Display| React
+end
 ```
 
-### Components:
-- **`apps/extension`**: Plasmo-based Chrome Extension injecting the Scout sidebar into Rightmove property pages.
-- **`apps/web`**: Next.js 15 application hosting AI-powered extraction and analysis endpoints.
-- **`packages/calculator`**: Shared logic for Buy-To-Let (BTL) and Section 24 tax comparisons.
-- **`packages/wealth-kernel`**: Mock service reflecting WealthKernel's API for Money Market Fund yield projections.
+### Monorepo Structure (pnpm workspaces)
+- **`apps/extension`**: Built with **Plasmo**. It handles the reliable extraction of property data (via `window.PAGE_MODEL` parsing) and renders the UI into a Shadow DOM to prevent CSS bleeding.
+- **`apps/web`**: A **Next.js 15** app hosting the AI orchestration layer. It uses `generateObject` (Vercel AI SDK) to enforce strict JSON schemas on the LLM output, ensuring type safety for the frontend.
+- **`packages/calculator`**: A shared TypeScript library containing the **Section 24** tax logic and SDLT algorithms.
+- **`packages/wealth-kernel`**: A mock adapter simulating the **WealthKernel API** to project returns on idle cash in Money Market Funds.
 
 ---
 
-## ✨ Features
+## ✨ Key Features
 
-- **AI Risk Dashboard**: One-click extraction of lease years, ground rent, and service charges with red-flag alerting (short leases, doubling ground rent clauses).
-- **Section 24 Tax Comparator**: Compare personal vs. limited company tax liability based on investment parameters.
-- **Dead Money Calculator**: Project lost interest during conveyancing using real-time Money Market Fund yields (5.1% mock).
-- **Dynamic Sourcing**: Pre-filled GetGround onboarding links based on property data.
+### 1. 🧠 AI Leasehold Lawyer
+Uses `gpt-4o-mini` to analyze the property description text in real-time.
+- **Red Flag Alerting:** Automatically detects keywords related to "short lease" (<80 years), "doubling ground rent", or "cash buyers only".
+- **Structured Extraction:** Converts unstructured agent text into typed JSON data (Service Charge: £X, Ground Rent: £Y).
+
+### 2. 📉 Section 24 Reality Check
+A real-time tax comparator that educates the user on **Personal vs. Corporate** ownership.
+- dynamically calculates the "Tax Trap" for higher-rate taxpayers.
+- factors in the 20% basic rate tax credit to show true net profit.
+
+### 3. 💰 "Dead Money" Simulator
+Demonstrates GetGround's ecosystem value by calculating the opportunity cost of the deposit.
+- **Integration:** Simulates a fetch to a Money Market Fund yield (mocked via WealthKernel).
+- **Projected Return:** Shows how much interest the user *could* earn on their deposit while waiting for conveyancing.
 
 ---
 
-## 🚀 How to Run
+## 🚀 Getting Started
 
-### 1. Prerequisites
-- [Node.js](https://nodejs.org/) (v18+)
-- [pnpm](https://pnpm.io/)
-- [OpenAI API Key](https://platform.openai.com/)
+### Prerequisites
+- Node.js 18+
+- pnpm
+- An OpenAI API Key
 
-### 2. Installation
+### Installation
+
 ```bash
+# Install dependencies
 pnpm install
+
+# Setup Environment Variables
+cp apps/web/.env.example apps/web/.env.local
+# Add your OPENAI_API_KEY to.env.local
+
 ```
 
-### 3. Environment Setup
-Create `apps/web/.env.local`:
-```env
-OPENAI_API_KEY=your_key_here
-```
+### Running Locally
 
-### 4. Development
-Start both the web API and the extension in development mode:
-
-**Run Web API:**
+1. **Start the API (Backend):**
 ```bash
 cd apps/web
 pnpm dev
+# Runs on http://localhost:3000
+
 ```
 
-**Run Extension:**
+
+2. **Start the Extension (Frontend):**
 ```bash
-pnpm dev:extension
+cd apps/extension
+pnpm dev
+
 ```
-Then load the `apps/extension/build/chrome-mv3-dev` folder into Chrome as an unpacked extension.
+
+
+3. **Load into Chrome:**
+* Open Chrome and navigate to `chrome://extensions`
+* Enable "Developer Mode" (top right).
+* Click "Load Unpacked".
+* Select `apps/extension/build/chrome-mv3-dev`.
+* Visit any property page on Rightmove to see the Scout Sidebar.
+
+
+
+---
+
+## ⚠️ Legal & Compliance Disclaimer
+
+**Educational Use Only:**
+This software is a Proof of Concept developed strictly for educational and demonstration purposes. It is **not** an official product of GetGround, Rightmove, or Zoopla.
+
+**Data Scraping:**
+This tool extracts data from third-party websites. Users should be aware that automated scraping may violate the Terms of Service of property portals. This code is designed to run locally for personal research and must not be used for commercial data harvesting or high-volume crawling without permission.
+
+**Financial Data:**
+All tax calculations, yield projections, and investment estimations are for illustrative purposes only and do not constitute financial advice.
 
 ---
 
 ## 🛠️ Tech Stack
-- **Frameworks**: Next.js 15, Plasmo, TailwindCSS
-- **AI**: Vercel AI SDK, OpenAI GPT-4o-mini
-- **Language**: TypeScript
-- **Package Manager**: pnpm (Workspaces)
+
+* **Framework:** Next.js 15 (App Router)
+* **Extension SDK:** Plasmo
+* **AI Engineering:** Vercel AI SDK, Zod (Structured Output)
+* **Styling:** TailwindCSS, Radix UI
+* **Language:** TypeScript
