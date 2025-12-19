@@ -28,6 +28,9 @@ export function extractPropertyData(): Promise<Property | null> {
 
         window.addEventListener("message", handler)
 
+        // Proactively request data in case main world script already ran
+        window.postMessage({ type: "getground-scout-request-data" }, "*")
+
         // Timeout fallback in case main world script hasn't run yet
         setTimeout(() => {
             if (resolved) return
@@ -95,10 +98,25 @@ function extractFromDOM(): Property | null {
             document.querySelector('address')
         const address = addressEl?.textContent?.trim() || ""
 
-        // Description
+        // Description - Rightmove uses various classes and data-testids
         const descEl = document.querySelector('[data-testid="property-description"]') ||
-            document.querySelector('[class*="description"]')
-        const description = descEl?.textContent?.trim() || ""
+            document.querySelector('.description-container') ||
+            document.querySelector('div[class*="PropertyDescription"]') ||
+            document.querySelector('div[class*="description"]') ||
+            document.querySelector('#description')
+
+        let description = descEl?.textContent?.trim() || ""
+
+        // Further fallback: look for the "Description" heading and take the next element
+        if (!description) {
+            const heading = Array.from(document.querySelectorAll('h2, h3, div')).find(el =>
+                el.textContent?.trim().toLowerCase() === 'description' ||
+                el.textContent?.trim().toLowerCase() === 'property description'
+            )
+            if (heading) {
+                description = heading.nextElementSibling?.textContent?.trim() || ""
+            }
+        }
 
         // Tenure
         const tenureEl = document.querySelector('[data-testid="tenure"]') ||
